@@ -9,4 +9,5 @@ public class BookingDTO {
     private LocalDateTime startDateTime;
     private LocalDateTime endDateTime;
     private Integer headcount;
+    private Boolean isCreate;
 }
