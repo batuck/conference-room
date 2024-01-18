@@ -1,0 +1,16 @@
+com\assessment\conferenceroom\controller\SchedulerController.class
+com\assessment\conferenceroom\repo\ConferenceRoomRepository.class
+com\assessment\conferenceroom\utility\DataLoader.class
+com\assessment\conferenceroom\repo\MaintenanceSlotRepository.class
+com\assessment\conferenceroom\model\ScheduledMeeting.class
+com\assessment\conferenceroom\model\ConferenceRoom.class
+com\assessment\conferenceroom\model\MaintenanceSlot.class
+com\assessment\conferenceroom\utility\CacheServiceSim.class
+com\assessment\conferenceroom\converter\ScheduledMeetingConverter.class
+com\assessment\conferenceroom\dto\BookingDTO.class
+com\assessment\conferenceroom\security\WebConfig.class
+com\assessment\conferenceroom\repo\ScheduledMeetingRepository.class
+com\assessment\conferenceroom\service\impl\SchedulerServiceImpl.class
+com\assessment\conferenceroom\service\SchedulerService.class
+com\assessment\conferenceroom\dto\ScheduledMeetingDto.class
+com\assessment\conferenceroom\ConferenceRoomApplication.class
