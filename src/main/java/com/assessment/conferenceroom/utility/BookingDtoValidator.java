@@ -15,6 +15,11 @@ public class BookingDtoValidator implements Validator {
         BookingDTO bookingDTO = (BookingDTO) target;
         LocalDateTime startTime = bookingDTO.getStartDateTime();
         LocalDateTime endTime = bookingDTO.getEndDateTime();
+        Integer headCount = bookingDTO.getHeadcount();
+
+        if(headCount == null || headCount < 1 || headCount > 20){
+            errors.rejectValue("headcount" , "Please enter valid head count");
+        }
 
         if(null == startTime ){
             errors.rejectValue("startDateTime" , "Please enter start time");

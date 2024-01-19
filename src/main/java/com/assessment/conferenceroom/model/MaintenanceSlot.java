@@ -2,10 +2,7 @@ package com.assessment.conferenceroom.model;
 
 
 import jakarta.persistence.*;
-import lombok.Getter;
-import lombok.NoArgsConstructor;
-import lombok.RequiredArgsConstructor;
-import lombok.Setter;
+import lombok.*;
 
 import java.time.LocalTime;
 
@@ -13,6 +10,7 @@ import java.time.LocalTime;
 @Setter
 @Entity
 @RequiredArgsConstructor
+@ToString
 @NoArgsConstructor(force = true)
 public class MaintenanceSlot {
     @Id

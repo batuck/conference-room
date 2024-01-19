@@ -14,7 +14,6 @@ import com.assessment.conferenceroom.dto.BookingDTO;
 import com.assessment.conferenceroom.dto.BookingResponseDto;
 import com.assessment.conferenceroom.dto.ScheduledMeetingDto;
 import com.assessment.conferenceroom.model.ConferenceRoom;
-import com.assessment.conferenceroom.model.MaintenanceSlot;
 import com.assessment.conferenceroom.model.ScheduledMeeting;
 import com.assessment.conferenceroom.repo.ConferenceRoomRepository;
 import com.assessment.conferenceroom.repo.MaintenanceSlotRepository;
@@ -57,8 +56,8 @@ class SchedulerServiceImplTest {
         // Arrange
         when(conferenceRoomRepository.findByCapacityGreaterThanEqualOrderByCapacityAsc(anyInt()))
                 .thenReturn(new ArrayList<>());
-        when(maintenanceSlotRepository.findByStartTimeLessThanEqualAndEndTimeGreaterThanEqual(Mockito.<LocalTime>any(),
-                Mockito.<LocalTime>any())).thenReturn(new ArrayList<>());
+        when(maintenanceSlotRepository.findOverlappingSlots(Mockito.<LocalTime>any(), Mockito.<LocalTime>any()))
+                .thenReturn(new ArrayList<>());
 
         BookingDTO bookingDTO = new BookingDTO();
         bookingDTO.setEndDateTime(LocalDate.of(1970, 1, 1).atStartOfDay());
@@ -71,8 +70,7 @@ class SchedulerServiceImplTest {
 
         // Assert
         verify(conferenceRoomRepository).findByCapacityGreaterThanEqualOrderByCapacityAsc(anyInt());
-        verify(maintenanceSlotRepository).findByStartTimeLessThanEqualAndEndTimeGreaterThanEqual(Mockito.<LocalTime>any(),
-                Mockito.<LocalTime>any());
+        verify(maintenanceSlotRepository).findOverlappingSlots(Mockito.<LocalTime>any(), Mockito.<LocalTime>any());
         assertEquals("No available room or time slot found.", actualCheckAndCreateScheduleResult.getMessage());
         assertFalse(actualCheckAndCreateScheduleResult.isRoomAvailable());
     }
@@ -90,11 +88,8 @@ class SchedulerServiceImplTest {
         conferenceRoomList.add(conferenceRoom);
         when(conferenceRoomRepository.findByCapacityGreaterThanEqualOrderByCapacityAsc(anyInt()))
                 .thenReturn(conferenceRoomList);
-        when(maintenanceSlotRepository.findByRoomAndStartTimeLessThanEqualAndEndTimeGreaterThanEqual(
-                Mockito.<ConferenceRoom>any(), Mockito.<LocalTime>any(), Mockito.<LocalTime>any()))
+        when(maintenanceSlotRepository.findOverlappingSlots(Mockito.<LocalTime>any(), Mockito.<LocalTime>any()))
                 .thenReturn(new ArrayList<>());
-        when(maintenanceSlotRepository.findByStartTimeLessThanEqualAndEndTimeGreaterThanEqual(Mockito.<LocalTime>any(),
-                Mockito.<LocalTime>any())).thenReturn(new ArrayList<>());
 
         ConferenceRoom conferenceRoom2 = new ConferenceRoom();
         conferenceRoom2.setConferenceRoomId(1L);
@@ -121,10 +116,7 @@ class SchedulerServiceImplTest {
 
         // Assert
         verify(conferenceRoomRepository).findByCapacityGreaterThanEqualOrderByCapacityAsc(anyInt());
-        verify(maintenanceSlotRepository).findByRoomAndStartTimeLessThanEqualAndEndTimeGreaterThanEqual(
-                Mockito.<ConferenceRoom>any(), Mockito.<LocalTime>any(), Mockito.<LocalTime>any());
-        verify(maintenanceSlotRepository).findByStartTimeLessThanEqualAndEndTimeGreaterThanEqual(Mockito.<LocalTime>any(),
-                Mockito.<LocalTime>any());
+        verify(maintenanceSlotRepository).findOverlappingSlots(Mockito.<LocalTime>any(), Mockito.<LocalTime>any());
         verify(scheduledMeetingRepository).findByConferenceRoomAndStartTimeLessThanEqualAndEndTimeGreaterThanEqual(
                 Mockito.<ConferenceRoom>any(), Mockito.<LocalDateTime>any(), Mockito.<LocalDateTime>any());
         verify(cacheServiceSim).getData(Mockito.<String>any());
@@ -132,7 +124,6 @@ class SchedulerServiceImplTest {
         assertEquals("Conference room null scheduled successfully.", actualCheckAndCreateScheduleResult.getMessage());
         assertTrue(actualCheckAndCreateScheduleResult.isRoomAvailable());
     }
-
 
     @Test
     void testCheckAndCreateSchedule3() {
@@ -156,11 +147,8 @@ class SchedulerServiceImplTest {
         conferenceRoomList.add(conferenceRoom);
         when(conferenceRoomRepository.findByCapacityGreaterThanEqualOrderByCapacityAsc(anyInt()))
                 .thenReturn(conferenceRoomList);
-        when(maintenanceSlotRepository.findByRoomAndStartTimeLessThanEqualAndEndTimeGreaterThanEqual(
-                Mockito.<ConferenceRoom>any(), Mockito.<LocalTime>any(), Mockito.<LocalTime>any()))
+        when(maintenanceSlotRepository.findOverlappingSlots(Mockito.<LocalTime>any(), Mockito.<LocalTime>any()))
                 .thenReturn(new ArrayList<>());
-        when(maintenanceSlotRepository.findByStartTimeLessThanEqualAndEndTimeGreaterThanEqual(Mockito.<LocalTime>any(),
-                Mockito.<LocalTime>any())).thenReturn(new ArrayList<>());
 
         ConferenceRoom conferenceRoom2 = new ConferenceRoom();
         conferenceRoom2.setConferenceRoomId(1L);
@@ -187,10 +175,7 @@ class SchedulerServiceImplTest {
 
         // Assert
         verify(conferenceRoomRepository).findByCapacityGreaterThanEqualOrderByCapacityAsc(anyInt());
-        verify(maintenanceSlotRepository).findByRoomAndStartTimeLessThanEqualAndEndTimeGreaterThanEqual(
-                Mockito.<ConferenceRoom>any(), Mockito.<LocalTime>any(), Mockito.<LocalTime>any());
-        verify(maintenanceSlotRepository).findByStartTimeLessThanEqualAndEndTimeGreaterThanEqual(Mockito.<LocalTime>any(),
-                Mockito.<LocalTime>any());
+        verify(maintenanceSlotRepository).findOverlappingSlots(Mockito.<LocalTime>any(), Mockito.<LocalTime>any());
         verify(scheduledMeetingRepository).findByConferenceRoomAndStartTimeLessThanEqualAndEndTimeGreaterThanEqual(
                 Mockito.<ConferenceRoom>any(), Mockito.<LocalDateTime>any(), Mockito.<LocalDateTime>any());
         verify(cacheServiceSim).getData(Mockito.<String>any());
@@ -198,7 +183,6 @@ class SchedulerServiceImplTest {
         assertEquals("Conference room null scheduled successfully.", actualCheckAndCreateScheduleResult.getMessage());
         assertTrue(actualCheckAndCreateScheduleResult.isRoomAvailable());
     }
-
 
     @Test
     void testCheckAndCreateSchedule4() {
@@ -210,86 +194,8 @@ class SchedulerServiceImplTest {
         conferenceRoomList.add(conferenceRoom);
         when(conferenceRoomRepository.findByCapacityGreaterThanEqualOrderByCapacityAsc(anyInt()))
                 .thenReturn(conferenceRoomList);
-
-        MaintenanceSlot maintenanceSlot = new MaintenanceSlot();
-        maintenanceSlot.setMaintenanceSlotId(1L);
-
-        ArrayList<MaintenanceSlot> maintenanceSlotList = new ArrayList<>();
-        maintenanceSlotList.add(maintenanceSlot);
-        when(maintenanceSlotRepository.findByRoomAndStartTimeLessThanEqualAndEndTimeGreaterThanEqual(
-                Mockito.<ConferenceRoom>any(), Mockito.<LocalTime>any(), Mockito.<LocalTime>any()))
-                .thenReturn(maintenanceSlotList);
-        when(maintenanceSlotRepository.findByStartTimeLessThanEqualAndEndTimeGreaterThanEqual(Mockito.<LocalTime>any(),
-                Mockito.<LocalTime>any())).thenReturn(new ArrayList<>());
-        when(scheduledMeetingRepository.findByConferenceRoomAndStartTimeLessThanEqualAndEndTimeGreaterThanEqual(
-                Mockito.<ConferenceRoom>any(), Mockito.<LocalDateTime>any(), Mockito.<LocalDateTime>any()))
+        when(maintenanceSlotRepository.findOverlappingSlots(Mockito.<LocalTime>any(), Mockito.<LocalTime>any()))
                 .thenReturn(new ArrayList<>());
-
-        BookingDTO bookingDTO = new BookingDTO();
-        bookingDTO.setEndDateTime(LocalDate.of(1970, 1, 1).atStartOfDay());
-        bookingDTO.setHeadcount(3);
-        bookingDTO.setIsCreate(true);
-        bookingDTO.setStartDateTime(LocalDate.of(1970, 1, 1).atStartOfDay());
-
-        // Act
-        BookingResponseDto actualCheckAndCreateScheduleResult = schedulerServiceImpl.checkAndCreateSchedule(bookingDTO);
-
-        // Assert
-        verify(conferenceRoomRepository).findByCapacityGreaterThanEqualOrderByCapacityAsc(anyInt());
-        verify(maintenanceSlotRepository).findByRoomAndStartTimeLessThanEqualAndEndTimeGreaterThanEqual(
-                Mockito.<ConferenceRoom>any(), Mockito.<LocalTime>any(), Mockito.<LocalTime>any());
-        verify(maintenanceSlotRepository).findByStartTimeLessThanEqualAndEndTimeGreaterThanEqual(Mockito.<LocalTime>any(),
-                Mockito.<LocalTime>any());
-        verify(scheduledMeetingRepository).findByConferenceRoomAndStartTimeLessThanEqualAndEndTimeGreaterThanEqual(
-                Mockito.<ConferenceRoom>any(), Mockito.<LocalDateTime>any(), Mockito.<LocalDateTime>any());
-        assertEquals("No available room or time slot found.", actualCheckAndCreateScheduleResult.getMessage());
-        assertFalse(actualCheckAndCreateScheduleResult.isRoomAvailable());
-    }
-
-    @Test
-    void testCheckAndCreateSchedule5() {
-        // Arrange
-        MaintenanceSlot maintenanceSlot = new MaintenanceSlot();
-        maintenanceSlot.setMaintenanceSlotId(1L);
-
-        ArrayList<MaintenanceSlot> maintenanceSlotList = new ArrayList<>();
-        maintenanceSlotList.add(maintenanceSlot);
-        when(maintenanceSlotRepository.findByStartTimeLessThanEqualAndEndTimeGreaterThanEqual(Mockito.<LocalTime>any(),
-                Mockito.<LocalTime>any())).thenReturn(maintenanceSlotList);
-
-        BookingDTO bookingDTO = new BookingDTO();
-        bookingDTO.setEndDateTime(LocalDate.of(1970, 1, 1).atStartOfDay());
-        bookingDTO.setHeadcount(3);
-        bookingDTO.setIsCreate(true);
-        bookingDTO.setStartDateTime(LocalDate.of(1970, 1, 1).atStartOfDay());
-
-        // Act
-        BookingResponseDto actualCheckAndCreateScheduleResult = schedulerServiceImpl.checkAndCreateSchedule(bookingDTO);
-
-        // Assert
-        verify(maintenanceSlotRepository).findByStartTimeLessThanEqualAndEndTimeGreaterThanEqual(Mockito.<LocalTime>any(),
-                Mockito.<LocalTime>any());
-        assertEquals("Cannot schedule a meeting during maintenance period.",
-                actualCheckAndCreateScheduleResult.getMessage());
-        assertFalse(actualCheckAndCreateScheduleResult.isRoomAvailable());
-    }
-
-
-    @Test
-    void testCheckAndCreateSchedule6() {
-        // Arrange
-        ConferenceRoom conferenceRoom = new ConferenceRoom();
-        conferenceRoom.setConferenceRoomId(1L);
-
-        ArrayList<ConferenceRoom> conferenceRoomList = new ArrayList<>();
-        conferenceRoomList.add(conferenceRoom);
-        when(conferenceRoomRepository.findByCapacityGreaterThanEqualOrderByCapacityAsc(anyInt()))
-                .thenReturn(conferenceRoomList);
-        when(maintenanceSlotRepository.findByRoomAndStartTimeLessThanEqualAndEndTimeGreaterThanEqual(
-                Mockito.<ConferenceRoom>any(), Mockito.<LocalTime>any(), Mockito.<LocalTime>any()))
-                .thenReturn(new ArrayList<>());
-        when(maintenanceSlotRepository.findByStartTimeLessThanEqualAndEndTimeGreaterThanEqual(Mockito.<LocalTime>any(),
-                Mockito.<LocalTime>any())).thenReturn(new ArrayList<>());
 
         ConferenceRoom conferenceRoom2 = new ConferenceRoom();
         conferenceRoom2.setConferenceRoomId(1L);
@@ -318,10 +224,7 @@ class SchedulerServiceImplTest {
 
         // Assert
         verify(conferenceRoomRepository).findByCapacityGreaterThanEqualOrderByCapacityAsc(anyInt());
-        verify(maintenanceSlotRepository).findByRoomAndStartTimeLessThanEqualAndEndTimeGreaterThanEqual(
-                Mockito.<ConferenceRoom>any(), Mockito.<LocalTime>any(), Mockito.<LocalTime>any());
-        verify(maintenanceSlotRepository).findByStartTimeLessThanEqualAndEndTimeGreaterThanEqual(Mockito.<LocalTime>any(),
-                Mockito.<LocalTime>any());
+        verify(maintenanceSlotRepository).findOverlappingSlots(Mockito.<LocalTime>any(), Mockito.<LocalTime>any());
         verify(scheduledMeetingRepository).findByConferenceRoomAndStartTimeLessThanEqualAndEndTimeGreaterThanEqual(
                 Mockito.<ConferenceRoom>any(), Mockito.<LocalDateTime>any(), Mockito.<LocalDateTime>any());
         assertEquals("No available room or time slot found.", actualCheckAndCreateScheduleResult.getMessage());
@@ -330,7 +233,7 @@ class SchedulerServiceImplTest {
 
 
     @Test
-    void testCheckAndCreateSchedule7() {
+    void testCheckAndCreateSchedule5() {
         // Arrange
         doNothing().when(cacheServiceSim).updateData(Mockito.<String>any(), Mockito.<ScheduledMeetingDto>any());
         when(cacheServiceSim.getData(Mockito.<String>any())).thenReturn(new ArrayList<>());
@@ -342,11 +245,8 @@ class SchedulerServiceImplTest {
         conferenceRoomList.add(conferenceRoom);
         when(conferenceRoomRepository.findByCapacityGreaterThanEqualOrderByCapacityAsc(anyInt()))
                 .thenReturn(conferenceRoomList);
-        when(maintenanceSlotRepository.findByRoomAndStartTimeLessThanEqualAndEndTimeGreaterThanEqual(
-                Mockito.<ConferenceRoom>any(), Mockito.<LocalTime>any(), Mockito.<LocalTime>any()))
+        when(maintenanceSlotRepository.findOverlappingSlots(Mockito.<LocalTime>any(), Mockito.<LocalTime>any()))
                 .thenReturn(new ArrayList<>());
-        when(maintenanceSlotRepository.findByStartTimeLessThanEqualAndEndTimeGreaterThanEqual(Mockito.<LocalTime>any(),
-                Mockito.<LocalTime>any())).thenReturn(new ArrayList<>());
         when(scheduledMeetingRepository.findByConferenceRoomAndStartTimeLessThanEqualAndEndTimeGreaterThanEqual(
                 Mockito.<ConferenceRoom>any(), Mockito.<LocalDateTime>any(), Mockito.<LocalDateTime>any()))
                 .thenReturn(new ArrayList<>());
@@ -377,10 +277,7 @@ class SchedulerServiceImplTest {
         verify(bookingDTO).setIsCreate(Mockito.<Boolean>any());
         verify(bookingDTO).setStartDateTime(Mockito.<LocalDateTime>any());
         verify(conferenceRoomRepository).findByCapacityGreaterThanEqualOrderByCapacityAsc(anyInt());
-        verify(maintenanceSlotRepository).findByRoomAndStartTimeLessThanEqualAndEndTimeGreaterThanEqual(
-                Mockito.<ConferenceRoom>any(), Mockito.<LocalTime>any(), Mockito.<LocalTime>any());
-        verify(maintenanceSlotRepository).findByStartTimeLessThanEqualAndEndTimeGreaterThanEqual(Mockito.<LocalTime>any(),
-                Mockito.<LocalTime>any());
+        verify(maintenanceSlotRepository).findOverlappingSlots(Mockito.<LocalTime>any(), Mockito.<LocalTime>any());
         verify(scheduledMeetingRepository).findByConferenceRoomAndStartTimeLessThanEqualAndEndTimeGreaterThanEqual(
                 Mockito.<ConferenceRoom>any(), Mockito.<LocalDateTime>any(), Mockito.<LocalDateTime>any());
         verify(cacheServiceSim).getData(Mockito.<String>any());
@@ -389,9 +286,8 @@ class SchedulerServiceImplTest {
         assertTrue(actualCheckAndCreateScheduleResult.isRoomAvailable());
     }
 
-
     @Test
-    void testCheckAndCreateSchedule8() {
+    void testCheckAndCreateSchedule6() {
         // Arrange
         ScheduledMeetingDto scheduledMeetingDto = new ScheduledMeetingDto();
         scheduledMeetingDto.setCachedTime(LocalDate.of(1970, 1, 1).atStartOfDay());
@@ -413,11 +309,8 @@ class SchedulerServiceImplTest {
         conferenceRoomList.add(conferenceRoom);
         when(conferenceRoomRepository.findByCapacityGreaterThanEqualOrderByCapacityAsc(anyInt()))
                 .thenReturn(conferenceRoomList);
-        when(maintenanceSlotRepository.findByRoomAndStartTimeLessThanEqualAndEndTimeGreaterThanEqual(
-                Mockito.<ConferenceRoom>any(), Mockito.<LocalTime>any(), Mockito.<LocalTime>any()))
+        when(maintenanceSlotRepository.findOverlappingSlots(Mockito.<LocalTime>any(), Mockito.<LocalTime>any()))
                 .thenReturn(new ArrayList<>());
-        when(maintenanceSlotRepository.findByStartTimeLessThanEqualAndEndTimeGreaterThanEqual(Mockito.<LocalTime>any(),
-                Mockito.<LocalTime>any())).thenReturn(new ArrayList<>());
         when(scheduledMeetingRepository.findByConferenceRoomAndStartTimeLessThanEqualAndEndTimeGreaterThanEqual(
                 Mockito.<ConferenceRoom>any(), Mockito.<LocalDateTime>any(), Mockito.<LocalDateTime>any()))
                 .thenReturn(new ArrayList<>());
@@ -448,10 +341,7 @@ class SchedulerServiceImplTest {
         verify(bookingDTO).setIsCreate(Mockito.<Boolean>any());
         verify(bookingDTO).setStartDateTime(Mockito.<LocalDateTime>any());
         verify(conferenceRoomRepository).findByCapacityGreaterThanEqualOrderByCapacityAsc(anyInt());
-        verify(maintenanceSlotRepository).findByRoomAndStartTimeLessThanEqualAndEndTimeGreaterThanEqual(
-                Mockito.<ConferenceRoom>any(), Mockito.<LocalTime>any(), Mockito.<LocalTime>any());
-        verify(maintenanceSlotRepository).findByStartTimeLessThanEqualAndEndTimeGreaterThanEqual(Mockito.<LocalTime>any(),
-                Mockito.<LocalTime>any());
+        verify(maintenanceSlotRepository).findOverlappingSlots(Mockito.<LocalTime>any(), Mockito.<LocalTime>any());
         verify(scheduledMeetingRepository).findByConferenceRoomAndStartTimeLessThanEqualAndEndTimeGreaterThanEqual(
                 Mockito.<ConferenceRoom>any(), Mockito.<LocalDateTime>any(), Mockito.<LocalDateTime>any());
         verify(cacheServiceSim).getData(Mockito.<String>any());

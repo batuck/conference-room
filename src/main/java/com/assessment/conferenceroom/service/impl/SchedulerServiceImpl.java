@@ -17,6 +17,7 @@ import org.springframework.stereotype.Service;
 
 import java.time.LocalDateTime;
 import java.time.LocalTime;
+import java.util.Iterator;
 import java.util.List;
 
 @Slf4j
@@ -83,9 +84,6 @@ public class SchedulerServiceImpl implements SchedulerService {
         List<ConferenceRoom> availableRooms = conferenceRoomRepository.findByCapacityGreaterThanEqualOrderByCapacityAsc(numberOfPeople);
 
         for (ConferenceRoom room : availableRooms) {
-            // Check for maintenance slots
-            List<MaintenanceSlot> maintenanceSlots = maintenanceSlotRepository.findByRoomAndStartTimeLessThanEqualAndEndTimeGreaterThanEqual(room,
-                    startTime.toLocalTime(), endTime.toLocalTime());
 
             // Check for overlapping meetings
             List<ScheduledMeeting> overlappingMeetings = scheduledMeetingRepository.findByConferenceRoomAndStartTimeLessThanEqualAndEndTimeGreaterThanEqual(room,
@@ -93,7 +91,7 @@ public class SchedulerServiceImpl implements SchedulerService {
 
             scheduledMeetingDto.setConferenceRoomName(room.getConferenceRoomName());
 
-            if (maintenanceSlots.isEmpty() && overlappingMeetings.isEmpty() && !checkIsRoomDetailsCached(scheduledMeetingDto)) {
+            if (overlappingMeetings.isEmpty() && !checkIsRoomDetailsCached(scheduledMeetingDto)) {
                 return room;
             }
         }
@@ -101,7 +99,15 @@ public class SchedulerServiceImpl implements SchedulerService {
     }
 
     private boolean isMaintenanceSlot(LocalTime startTime, LocalTime endTime) {
-        List<MaintenanceSlot> maintenanceSlots = maintenanceSlotRepository.findByStartTimeLessThanEqualAndEndTimeGreaterThanEqual(startTime, endTime);
+        List<MaintenanceSlot> maintenanceSlots = maintenanceSlotRepository.findOverlappingSlots(startTime, endTime);
+        Iterator<MaintenanceSlot> msIterator = maintenanceSlots.iterator();
+        while(msIterator.hasNext()) {
+            MaintenanceSlot tempMs = msIterator.next();
+            log.info("Slots {}", tempMs);
+            if (tempMs.getEndTime().equals(startTime)){
+                msIterator.remove();
+            }
+        }
         return !maintenanceSlots.isEmpty();
     }
 
