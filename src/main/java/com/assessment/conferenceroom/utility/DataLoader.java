@@ -49,16 +49,16 @@ public class DataLoader implements CommandLineRunner {
         MaintenanceSlot slot3 = new MaintenanceSlot(LocalTime.of(17,0), LocalTime.of(17,15), room1);
 
         MaintenanceSlot slot4 = new MaintenanceSlot(LocalTime.of(9,0), LocalTime.of(9,15), room2);
-        MaintenanceSlot slot5 = new MaintenanceSlot(LocalTime.of(9,0), LocalTime.of(9,15), room2);
-        MaintenanceSlot slot6 = new MaintenanceSlot(LocalTime.of(9,0), LocalTime.of(9,15), room2);
+        MaintenanceSlot slot5 = new MaintenanceSlot(LocalTime.of(13,0), LocalTime.of(13,15), room2);
+        MaintenanceSlot slot6 = new MaintenanceSlot(LocalTime.of(17,0), LocalTime.of(17,15), room2);
 
         MaintenanceSlot slot7 = new MaintenanceSlot(LocalTime.of(9,0), LocalTime.of(9,15), room3);
-        MaintenanceSlot slot8 = new MaintenanceSlot(LocalTime.of(9,0), LocalTime.of(9,15), room3);
-        MaintenanceSlot slot9 = new MaintenanceSlot(LocalTime.of(9,0), LocalTime.of(9,15), room3);
+        MaintenanceSlot slot8 = new MaintenanceSlot(LocalTime.of(13,0), LocalTime.of(13,15), room3);
+        MaintenanceSlot slot9 = new MaintenanceSlot(LocalTime.of(17,0), LocalTime.of(17,15), room3);
 
         MaintenanceSlot slot10 = new MaintenanceSlot(LocalTime.of(9,0), LocalTime.of(9,15), room4);
-        MaintenanceSlot slot11 = new MaintenanceSlot(LocalTime.of(9,0), LocalTime.of(9,15), room4);
-        MaintenanceSlot slot12 = new MaintenanceSlot(LocalTime.of(9,0), LocalTime.of(9,15), room4);
+        MaintenanceSlot slot11 = new MaintenanceSlot(LocalTime.of(13,0), LocalTime.of(13,15), room4);
+        MaintenanceSlot slot12 = new MaintenanceSlot(LocalTime.of(17,0), LocalTime.of(17,15), room4);
 
         maintenanceSlotRepository.saveAll(List.of(slot1,slot2,slot3,slot4,slot5,slot6,slot7,slot8,slot9,slot10,slot11,slot12));
     }

@@ -1,6 +1,7 @@
 package com.assessment.conferenceroom.service.impl;
 
 import com.assessment.conferenceroom.dto.BookingDTO;
+import com.assessment.conferenceroom.dto.BookingResponseDto;
 import com.assessment.conferenceroom.dto.ScheduledMeetingDto;
 import com.assessment.conferenceroom.model.ConferenceRoom;
 import com.assessment.conferenceroom.model.MaintenanceSlot;
@@ -33,13 +34,16 @@ public class SchedulerServiceImpl implements SchedulerService {
     CacheServiceSim cacheServiceSim;
 
     @Override
-    public String checkAndCreateSchedule(BookingDTO bookingDTO) {
-        if (isMaintenanceSlot(bookingDTO.getStartDateTime().toLocalTime(), bookingDTO.getStartDateTime().toLocalTime())) {
-            return "Cannot schedule a meeting during maintenance period.";
+    public BookingResponseDto checkAndCreateSchedule(BookingDTO bookingDTO) {
+        BookingResponseDto bookingResponseDto = new BookingResponseDto();
+        if (isMaintenanceSlot(bookingDTO.getStartDateTime().toLocalTime(), bookingDTO.getEndDateTime().toLocalTime())) {
+            bookingResponseDto.setMessage("Cannot schedule a meeting during maintenance period.");
+            bookingResponseDto.setRoomAvailable(false);
+            return bookingResponseDto;
         }
 
         // Find available room and time slot
-        ConferenceRoom conferenceRoom = findAvailableRoom(bookingDTO.getStartDateTime(), bookingDTO.getEndDateTime(), bookingDTO.getHeadcount());
+        ConferenceRoom conferenceRoom = findAvailableRoom(bookingDTO.getStartDateTime(), bookingDTO.getEndDateTime(), bookingDTO.getHeadcount(),bookingDTO.getIsCreate());
         if (conferenceRoom != null) {
             if (bookingDTO.getIsCreate()) {
                 ScheduledMeeting meeting = new ScheduledMeeting();
@@ -50,7 +54,7 @@ public class SchedulerServiceImpl implements SchedulerService {
                 // Assuming room_id is set based on availability
                 meeting.setConferenceRoom(conferenceRoom);
                 scheduledMeetingRepository.save(meeting);
-                return "Meeting scheduled successfully.";
+                bookingResponseDto.setMessage("Conference room " +conferenceRoom.getConferenceRoomName()+ " scheduled successfully.");
             } else {
                 ScheduledMeetingDto scheduledMeetingDto = new ScheduledMeetingDto();
                 scheduledMeetingDto.setStartTime(bookingDTO.getStartDateTime());
@@ -59,18 +63,22 @@ public class SchedulerServiceImpl implements SchedulerService {
                 scheduledMeetingDto.setConferenceRoomName(conferenceRoom.getConferenceRoomName());
 
                 cacheServiceSim.updateData(conferenceRoom.getConferenceRoomName(), scheduledMeetingDto);
-                return conferenceRoom.getConferenceRoomName() + " is available book in next 30 sec";
+                bookingResponseDto.setMessage(conferenceRoom.getConferenceRoomName() + " is available book in next 60 sec");
             }
+            bookingResponseDto.setRoomAvailable(true);
         } else {
-            return "No available room or time slot found.";
+            bookingResponseDto.setMessage("No available room or time slot found.");
+            bookingResponseDto.setRoomAvailable(false);
         }
+        return bookingResponseDto;
     }
 
-    private ConferenceRoom findAvailableRoom(LocalDateTime startTime, LocalDateTime endTime, int numberOfPeople) {
+    private ConferenceRoom findAvailableRoom(LocalDateTime startTime, LocalDateTime endTime, int numberOfPeople,boolean isCreate) {
 
         ScheduledMeetingDto scheduledMeetingDto = new ScheduledMeetingDto();
         scheduledMeetingDto.setStartTime(startTime);
         scheduledMeetingDto.setEndTime(endTime);
+        scheduledMeetingDto.setCreate(isCreate);
 
         List<ConferenceRoom> availableRooms = conferenceRoomRepository.findByCapacityGreaterThanEqualOrderByCapacityAsc(numberOfPeople);
 
@@ -103,6 +111,10 @@ public class SchedulerServiceImpl implements SchedulerService {
         if (tempScheduledMeetings != null) {
             // Iterate through the cached meetings and check for overlaps
             for (ScheduledMeetingDto cachedMeeting : tempScheduledMeetings) {
+
+                if (scheduledMeetingDto.isCreate() && currentTime.isBefore(cachedMeeting.getCachedTime())) {
+                    return false;
+                }else
                 if (cachedMeeting.getCachedTime().isAfter(currentTime) && isOverlap(scheduledMeetingDto, cachedMeeting)) {
                     return true;
                 }

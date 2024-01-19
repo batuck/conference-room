@@ -12,5 +12,6 @@ public class ScheduledMeetingDto {
     private Integer headcount;
     private LocalDateTime cachedTime;
     private String conferenceRoomName;
+    private boolean isCreate;
 
 }
