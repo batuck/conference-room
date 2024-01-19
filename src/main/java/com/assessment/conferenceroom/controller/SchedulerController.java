@@ -26,6 +26,7 @@ public class SchedulerController {
     public ResponseEntity<BookingResponseDto> checkSchedule(@Valid @RequestBody BookingDTO bookingDTO){
         log.info("Received input check {}",bookingDTO);
         BookingResponseDto response = schedulerService.checkAndCreateSchedule(bookingDTO);
+        log.info("Generated response {}",response);
         return ResponseEntity.ok(response);
     }
 

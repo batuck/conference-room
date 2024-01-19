@@ -16,7 +16,7 @@ public class BookingDtoValidator implements Validator {
         LocalDateTime startTime = bookingDTO.getStartDateTime();
         LocalDateTime endTime = bookingDTO.getEndDateTime();
 
-        /*if(null == startTime ){
+        if(null == startTime ){
             errors.rejectValue("startDateTime" , "Please enter start time");
         }
 
@@ -42,7 +42,7 @@ public class BookingDtoValidator implements Validator {
         long durationInMinutes = ChronoUnit.MINUTES.between(startTime.toLocalTime(), endTime.toLocalTime());
         if(durationInMinutes % 15 != 0){
             errors.rejectValue("endDateTime" , "Selected time is not in multiple of 15 minutes");
-        }*/
+        }
     }
 
 
